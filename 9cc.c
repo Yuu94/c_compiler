@@ -6,11 +6,11 @@
 
 // トークンの型を表す値
 enum {
-	TK_NUM = 256, // 整数トークン
+	TK_NUM = 256, // 整数トークン。pが整数の場合、Token.tyに格納する
 	TK_EOF,       // 入力の終了を表すトークン
 };
 
-// トークンの型
+// トークンの型(structは構造体(object?))
 typedef struct {
 	int ty;       // トークンの型
 	int val;      // tyがTK_NUMの場合、その数値
@@ -34,7 +34,7 @@ void error(char *fmt, ...) {
 void tokenize(char *p) {
 	int i = 0;
 	while (*p) {
-		// 空白をスキップ
+		// 空白をスキップ(空白をチェック)
 		if (isspace(*p)) {
 			p++;
 			continue;
@@ -48,6 +48,7 @@ void tokenize(char *p) {
 			continue;
 		}
 
+		// 文字が10進数かチェック
 		if (isdigit(*p)) {
 			tokens[i].ty = TK_NUM;
 			tokens[i].input = p;
@@ -59,6 +60,7 @@ void tokenize(char *p) {
 		error("トークナイズできません: %s", p);
 		exit(1);
 	}
+	// pがなくなったら終わりを表すトークンを格納する
 	tokens[i].ty = TK_EOF;
 	tokens[i].input = p;
 }
@@ -83,15 +85,16 @@ int main(int argc, char **argv) {
 		error("最初の項が数字ではありません。");
 	printf("	mov rax, %d\n", tokens[0].val);
 
-	// 
+	// 2つ目からトークンの内容を解析(現時点で空白はない) 
 	int i = 1;
 	while (tokens[i].ty != TK_EOF) {
 		// tokens[i]に+が格納されていたら
 		if (tokens[i].ty == '+') {
 			// インクリメントで先頭アドレスが一つ増える(文字が右にシフト)
 			// hoge -> oge -> ge -> e
-			// +記号を飛ばす
+			// +記号を飛ばす(次は数字のはず)
 			i++;
+			// i++で飛ばした次の文字が数字であるか判定
 			if (tokens[i].ty != TK_NUM)
 				error("予期しないトークンです: %s", tokens[i].input);
 			// addアセンブリを記述し、次の数字読み取り
